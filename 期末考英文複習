@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>期末考複習進度追蹤表</title>
+    <style>
+        :root {
+            /* 綠色系派對主題 */
+            --primary-color: #10b981;    /* 翡翠綠 */
+            --primary-light: #d1fae5;    /* 淺薄荷綠 */
+            --success-color: #059669;    /* 森林綠 */
+            --bg-gradient-1: #0f766e;    /* 深青綠 */
+            --bg-gradient-2: #10b981;    /* 翡翠綠 */
+            --bg-gradient-3: #6ee7b7;    /* 薄荷綠 */
+            --card-bg: rgba(255, 255, 255, 0.85); /* 毛玻璃白 */
+            --text-main: #064e3b;        /* 極深綠，替代純黑 */
+            --text-muted: #047857;       /* 深綠灰 */
+            --border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* 唯美的大自然綠色漸層背景 */
+            background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 50%, var(--bg-gradient-3) 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            margin: 0;
+            padding: 30px 15px;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .scenery-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 飛機動畫 */
+        .plane {
+            position: absolute;
+            top: 15%;
+            left: -10%;
+            font-size: 3rem;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+            animation: flyAcross 25s linear infinite;
+        }
+
+        @keyframes flyAcross {
+            0% { transform: translate(0, 0) scale(1) rotate(15deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translate(120vw, -15vh) scale(0.8) rotate(15deg); opacity: 0; }
+        }
+
+        /* 手帳風拍立得貼紙 */
+        .sticker {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 12px;
+            box-shadow: 0 15px 25px rgba(0,0,0,0.15);
+            font-weight: 800;
+            color: #064e3b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.1rem;
+            backdrop-filter: blur(5px);
+            border: 2px solid white;
+            animation: float 6s ease-in-out infinite alternate;
+        }
+        .sticker span { font-size: 1.8rem; }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(var(--rot)); }
+            100% { transform: translateY(-15px) rotate(var(--rot)); }
+        }
+
+        /* 定位貼紙位置 (模擬雜誌課文主題) */
+        .sticker.iceland { top: 12%; right: 8%; --rot: 8deg; animation-delay: 0s; }
+        .sticker.barcelona { top: 45%; left: 3%; --rot: -12deg; animation-delay: 1s; }
+        .sticker.taipei101 { bottom: 15%; right: 5%; --rot: -6deg; animation-delay: 2s; }
+        .sticker.animals { bottom: 25%; left: 8%; --rot: 10deg; animation-delay: 0.5s; }
+
+        .container {
+            max-width: 750px; /* 縮小最大寬度，讓單欄置中更美觀 */
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 移除原本的雙欄設定 */
+        .checklist-section {
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin: 0 0 10px 0;
+            color: var(--success-color);
+            text-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 1.15em;
+            font-weight: 600;
+        }
+
+        /* 儀表板卡片置中設定 (移至上方) */
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 35px 20px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin: 0 auto 35px auto;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .progress-circle-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin-bottom: 25px;
+        }
+
+        .progress-circle {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary-color) 0%, rgba(16, 185, 129, 0.15) 0%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.1s ease;
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        }
+
+        .progress-circle-inner {
+            width: 145px;
+            height: 145px;
+            background: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .progress-text {
+            font-size: 2.8em;
+            font-weight: 900;
+            color: var(--success-color);
+            line-height: 1;
+        }
+
+        .progress-label {
+            font-size: 0.95em;
+            color: var(--text-muted);
+            margin-top: 5px;
+            font-weight: 700;
+        }
+
+        .motivational-text {
+            font-size: 1.25em;
+            font-weight: 800;
+            color: var(--success-color);
+            min-height: 1.5em;
+        }
+
+        .category-section {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+
+        .category-title {
+            font-size: 1.5em;
+            font-weight: 800;
+            color: var(--success-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 15px;
+            border-bottom: 2px dashed var(--border-color);
+        }
+
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .task-item {
+            margin-bottom: 14px;
+        }
+
+        .task-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .task-label {
+            display: flex;
+            align-items: flex-start;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+        }
+
+        .task-label:hover {
+            background: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+        }
+
+        .task-label.checked {
+            background: var(--primary-light);
+            border-color: #6ee7b7;
+        }
+
+        .task-text {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: var(--text-main);
+            transition: all 0.3s;
+            margin-top: 2px;
+            line-height: 1.4;
+        }
+
+        .task-label.checked .task-text {
+            color: var(--success-color);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        /* 綠色系彈跳核取方塊 */
+        .custom-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border: 3px solid #94a3b8;
+            border-radius: 8px;
+            margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            background: #fff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-checkbox:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .custom-checkbox:checked::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 8px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 1100px) {
+            .sticker { display: none; /* 螢幕不夠大時隱藏兩側貼紙以免擋住文字 */ }
+        }
+
+        /* 重新調整手機版的圓餅圖樣式 (取消原本置底壓縮的設定) */
+        @media (max-width: 768px) {
+            .progress-circle-container {
+                width: 150px;
+                height: 150px;
+                margin-bottom: 20px;
+            }
+            .progress-circle-inner {
+                width: 120px;
+                height: 120px;
+            }
+            .progress-text { font-size: 2.2em; }
+            .motivational-text { 
+                font-size: 1.15em; 
+                text-align: center; 
+            }
+        }
+
+        @media (max-width: 480px) {
+            body { padding: 20px 10px; } /* 已經沒有置底工具列，所以拿掉多餘的留白 */
+            .header { padding: 20px 15px; border-radius: 20px; }
+            .header h1 { font-size: 1.8em; }
+            .category-section { padding: 20px 15px; border-radius: 20px; }
+            .task-label { padding: 15px 12px; }
+            .task-text { font-size: 1.05em; }
+            .custom-checkbox { width: 24px; height: 24px; margin-right: 12px; border-width: 2px;}
+            .custom-checkbox:checked::after { top: 2px; left: 7px; width: 5px; height: 10px; border-width: 0 2.5px 2.5px 0;}
+        }
+    </style>
+</head>
+<body>
+
+<div class="scenery-layer">
+    <div class="plane">✈️</div>
+    <div class="sticker iceland"><span>🏔️</span> 極光冰島</div>
+    <div class="sticker barcelona"><span>⛪</span> 巴塞隆納</div>
+    <div class="sticker taipei101"><span>🏙️</span> 台北101</div>
+    <div class="sticker animals"><span>🐘</span> 叢林生態</div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>🌍 期末考環遊世界追蹤表</h1>
+        <p>勾選已完成的任務，看著綠色圓環邁向 100% 吧！</p>
+    </div>
+
+    <!-- 儀表板區 (移至最上方置中) -->
+    <div class="dashboard-card">
+        <div class="progress-circle-container">
+            <div class="progress-circle" id="progressCircle">
+                <div class="progress-circle-inner">
+                    <div class="progress-text"><span id="progressText">0</span>%</div>
+                    <div class="progress-label">整體進度</div>
+                </div>
+            </div>
+        </div>
+        <div class="motivational-text" id="motivationalText">準備開始你的學習旅程！🌱</div>
+    </div>
+
+    <!-- 清單區 -->
+    <div class="checklist-section">
+        <form id="trackerForm">
+            <div id="checklistContainer"></div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const tasksData = [
+        // 課本 (55%)
+        { id: 'tb_1', title: 'B4L6 句型', weight: 6, category: 'book' },
+        { id: 'tb_2', title: 'B4L7 全', weight: 22, category: 'book' },
+        { id: 'tb_3', title: 'B4L8 全', weight: 22, category: 'book' },
+        { id: 'tb_4', title: 'B4L9 句型', weight: 5, category: 'book' },
+        // 英文雜誌 (25%)
+        { id: 'mag_1', title: 'All+英雜U2 掌握舒適飛行的聰明秘訣', weight: 5, category: 'mag' },
+        { id: 'mag_2', title: 'All+英雜U6 聖家堂：高第畢生未竟的建築傳奇', weight: 5, category: 'mag' },
+        { id: 'mag_3', title: 'All+英雜U9 短影音對青少年的影響', weight: 5, category: 'mag' },
+        { id: 'mag_4', title: 'All+英雜U12 讓高樓屹立不搖的秘密武器', weight: 5, category: 'mag' },
+        { id: 'mag_5', title: 'All+英雜U14 野生動物的合作生存之道', weight: 5, category: 'mag' },
+        // 單字書 (20%)
+        { id: 'voc_1', title: '高頻字彙Part 2 (Advanced) U8', weight: 5, category: 'vocab' },
+        { id: 'voc_2', title: '高頻字彙Part 2 (Advanced) U9', weight: 5, category: 'vocab' },
+        { id: 'voc_3', title: '高頻字彙Part 2 (Advanced) U10', weight: 5, category: 'vocab' },
+        { id: 'voc_4', title: '高頻字彙Part 2 (Advanced) U11', weight: 5, category: 'vocab' }
+    ];
+
+    const categoriesInfo = {
+        'book': { title: '📚 課本核心範圍', color: '#10b981' },
+        'mag': { title: '📰 All+ 英文雜誌', color: '#059669' },
+        'vocab': { title: '📖 高頻字彙 (Advanced)', color: '#047857' }
+    };
+
+    let currentVisualProgress = 0; 
+
+    function renderChecklist() {
+        const container = document.getElementById('checklistContainer');
+        container.innerHTML = '';
+
+        const savedProgress = JSON.parse(localStorage.getItem('examTrackerProgress')) || {};
+
+        for (const catKey in categoriesInfo) {
+            const catTasks = tasksData.filter(t => t.category === catKey);
+            if (catTasks.length === 0) continue;
+
+            const section = document.createElement('div');
+            section.className = 'category-section';
+
+            const title = document.createElement('h3');
+            title.className = 'category-title';
+            title.innerText = categoriesInfo[catKey].title;
+            section.appendChild(title);
+
+            const ul = document.createElement('ul');
+            ul.className = 'task-list';
+
+            catTasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+
+                const isChecked = savedProgress[task.id] === true;
+
+                li.innerHTML = `
+                    <label class="task-label ${isChecked ? 'checked' : ''}" id="label_${task.id}">
+                        <input type="checkbox" class="custom-checkbox" id="${task.id}" value="${task.weight}" ${isChecked ? 'checked' : ''} onchange="handleCheck('${task.id}')">
+                        <span class="task-text">${task.title}</span>
+                    </label>
+                `;
+                ul.appendChild(li);
+            });
+
+            section.appendChild(ul);
+            container.appendChild(section);
+        }
+
+        calculateAndAnimateProgress();
+    }
+
+    function handleCheck(taskId) {
+        const checkbox = document.getElementById(taskId);
+        const label = document.getElementById(`label_${taskId}`);
+        
+        if (checkbox.checked) {
+            label.classList.add('checked');
+        } else {
+            label.classList.remove('checked');
+        }
+
+        saveProgress();
+        calculateAndAnimateProgress();
+    }
+
+    function saveProgress() {
+        const progressObj = {};
+        tasksData.forEach(task => {
+            const checkbox = document.getElementById(task.id);
+            if (checkbox) {
+                progressObj[task.id] = checkbox.checked;
+            }
+        });
+        localStorage.setItem('examTrackerProgress', JSON.stringify(progressObj));
+    }
+
+    function calculateAndAnimateProgress() {
+        let totalScore = 0;
+        tasksData.forEach(task => {
+            const checkbox = document.getElementById(task.id);
+            if (checkbox && checkbox.checked) {
+                totalScore += task.weight;
+            }
+        });
+
+        const targetProgress = Math.min(Math.round(totalScore), 100);
+        animateDonutChart(targetProgress);
+        updateMotivationalText(targetProgress);
+    }
+
+    function animateDonutChart(target) {
+        const duration = 800; 
+        const startTimestamp = performance.now();
+        const startValue = currentVisualProgress;
+
+        function step(timestamp) {
+            const elapsed = timestamp - startTimestamp;
+            let progressRatio = Math.min(elapsed / duration, 1);
+            
+            const easeOut = 1 - Math.pow(1 - progressRatio, 3);
+            currentVisualProgress = startValue + (target - startValue) * easeOut;
+            const currentInt = Math.round(currentVisualProgress);
+
+            document.getElementById('progressText').innerText = currentInt;
+            
+            // 達標變色邏輯 (綠色系)
+            let chartColor = '#10b981'; // 預設翡翠綠
+            if (currentInt === 100) {
+                chartColor = '#059669'; // 100% 變深邃森林綠
+            }
+            
+            const circle = document.getElementById('progressCircle');
+            circle.style.background = `conic-gradient(${chartColor} ${currentVisualProgress}%, rgba(16, 185, 129, 0.15) 0%)`;
+            document.getElementById('progressText').style.color = chartColor;
+
+            if (progressRatio < 1) {
+                requestAnimationFrame(step);
+            } else {
+                currentVisualProgress = target; 
+            }
+        }
+        requestAnimationFrame(step);
+    }
+
+    function updateMotivationalText(score) {
+        const textEl = document.getElementById('motivationalText');
+        if (score === 0) {
+            textEl.innerText = "準備開始你的學習旅程！🌱";
+            textEl.style.color = "#047857";
+        } else if (score < 30) {
+            textEl.innerText = "起飛囉！這是一個好的開始！✈️";
+            textEl.style.color = "#059669";
+        } else if (score < 70) {
+            textEl.innerText = "漸入佳境！繼續保持這個節奏！🌿";
+            textEl.style.color = "#10b981";
+        } else if (score < 100) {
+            textEl.innerText = "最後衝刺！目標就在眼前！🏃‍♂️💨";
+            textEl.style.color = "#0ea5e9"; // 藍綠色
+        } else {
+            textEl.innerText = "太神啦！你已經 100% 準備就緒！🎉💯";
+            textEl.style.color = "#059669";
+        }
+    }
+
+    window.onload = renderChecklist;
+
+</script>
+
+</body>
+</html>
